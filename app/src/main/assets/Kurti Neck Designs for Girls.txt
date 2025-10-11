@@ -1,0 +1,28 @@
+App_Name: Kurti Neck Designs for Girls
+
+App_Name_Change: 
+
+Package_Name: com.entertainment.kurtineck.deignss
+
+Account_ Name: Entertainment.apps02
+
+
+Version_Code: 2
+
+Version_ Name: 1.1
+
+
+$app_id = "ca-app-pub-6502960475308252~8136558080"
+
+$banner_id = "ca-app-pub-6502960475308252/3629502718"
+
+$Interstitial_id = "ca-app-pub-6502960475308252/4005741385"
+
+
+App_Link: https://play.google.com/store/apps/details?id=com.entertainment.kurtineck.deignss
+
+Git_Link: git remote add origin https://mindgamesoft01@bitbucket.org/mindgamesoft01/kurti-neck-designs-for-girls-entertainmentapps.git
+
+Privacy_Policy: https://blousedesings2019.blogspot.com/2020/12/privacy-policy.html
+
+Please the app with the key, that key will be safe

@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Inspiring Good Morning Quotes</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="BANNER_PROD_ID">ca-app-pub-1084948991802147/1037509255</string>
+    <string name="INTERSTITIAL_ID">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="APPLICATION_ADS_ID">ca-app-pub-1084948991802147~5615010520</string>
+    <string name="AppScreenTitle">Click here to Read All the Telugu Stoires</string>
+    <string name="terms_privacy"><u>Privacy Policy Terms and Conditions</u></string>
+    <!--<string name="target_date">13-AUG-20018</string> SAMPLE DATE FORMAT-->
+    <string name="assets_exception">Gallery Icon count less than Gallery Directory list in Assets folder. Please fix and rerun the app.</string>
+
+</resources>
