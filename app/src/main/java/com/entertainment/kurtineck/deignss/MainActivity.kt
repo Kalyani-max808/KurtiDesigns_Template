@@ -11,9 +11,12 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
@@ -35,13 +38,12 @@ import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.system.exitProcess
 
-
 class MainActivity : AppCompatActivity(), AppInterfaces {
 
     private lateinit var navController: NavController
     private lateinit var navHostFragment: NavHostFragment
     private var BannerLoaded = false
-    private var DB_NAME = "db_temp01.db" //CHANGE THE DB NAME FOR EVERY APP
+    private var DB_NAME = "db_temp01.db"
 
     private val StartScreen = "START_SCREEN"
     private val TOPICS = "TOPICS"
@@ -50,19 +52,29 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     private val BookmarkMenu = "BOOKMARK_MENU"
     private val BookmarkItem = "BOOKMARK_ITEM"
     private val PrivacyPolicy = "PRIVACY_POLICY"
-    private lateinit var adBanner:com.google.android.gms.ads.AdView
-
-    private lateinit var clMainActivity: View // Using the existing ID for the root layout
-
+    private lateinit var adBanner: com.google.android.gms.ads.AdView
+    private lateinit var clMainActivity: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
+
+        // ✅ STEP 1: Enable edge-to-edge FIRST (Google's recommended way)
+        enableEdgeToEdge()
+
+        // ✅ STEP 2: Set content view
         setContentView(R.layout.activity_main)
+
+        // ✅ STEP 3: Initialize views
         adBanner = findViewById(R.id.adBanner)
-        clMainActivity = findViewById(R.id.clMainActivity) // Initialize clMainActivity
+        clMainActivity = findViewById(R.id.clMainActivity)
+
+        // ✅ STEP 4: Setup system bars (modern, non-deprecated way)
+        setupSystemBars()
+
+        // ✅ STEP 5: Apply window insets
         applyWindowInsets()
-        setupSystemBars() // Call the method to handle status and navigation bars
+
+        // Continue with other initialization
         startANRWatchDog()
         initializeAdmob()
         loadSplashScreen()
@@ -75,17 +87,55 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (isNotLastScreen()) {
-                    // If there's a fragment on the back stack, pop it and load the previous one
                     fragmentsStack.pop()
                     loadPreviousFragment()
                 } else {
-                    // This is the last screen, so we perform the exit logic
                     FRAGMENT_LOADED = false
                     AdObject.SPLASH_CALLED = false
                     exitApplication()
                 }
             }
         })
+    }
+
+    // ✅ MODERN, NON-DEPRECATED setupSystemBars()
+    private fun setupSystemBars() {
+        // Handle display cutouts
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+
+        // Enable drawing under system bars
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Modern approach for Android 11+ (API 30+)
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.let { controller ->
+                controller.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                controller.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                )
+            }
+        } else {
+            // For Android 5.0 to Android 10 (API 21-29)
+            // Use WindowCompat instead of deprecated systemUiVisibility
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowCompat.getInsetsController(window, window.decorView)?.let { controller ->
+                controller.isAppearanceLightStatusBars = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    controller.isAppearanceLightNavigationBars = true
+                }
+            }
+        }
+
+        // Set system bar colors (transparent for edge-to-edge)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+        }
     }
 
     private fun applyWindowInsets() {
@@ -100,11 +150,6 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         setupRootLayoutInsets(rootLayout)
         setupNavHostInsets(navHostFragmentContainer)
         setupAdBannerInsets(adBannerLayout)
-        Log.d(
-            "EdgeToEdgeTiming",
-            "ALL insets DONE. Duration: ${System.currentTimeMillis() - startTime}ms"
-        )
-
 
         val endTime = System.currentTimeMillis()
         Log.d("EdgeToEdgeTiming", "applyWindowInsets END. Total Duration: ${endTime - startTime}ms")
@@ -112,11 +157,8 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
 
     private fun setupRootLayoutInsets(rootLayout: View) {
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, windowInsets ->
-            // If the root layout itself doesn't need padding (because children handle it),
-            // you can simply return the insets to be passed along, or consume them if fully handled.
-            // For example, if it has a background that should go edge to edge:
-            // view.updatePadding(top = 0, bottom = 0, left = 0, right = 0) // Ensure no default padding interferes
-            windowInsets // Pass insets down to children or other listeners.
+            // Pass insets down to children
+            windowInsets
         }
     }
 
@@ -124,32 +166,27 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         ViewCompat.setOnApplyWindowInsetsListener(navHostContainer) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            if (view.paddingTop != systemBars.top ||
-                view.paddingLeft != systemBars.left ||
-                view.paddingRight != systemBars.right) {
-                // Log.d("EdgeToEdgeDebug", "NavHost: Applying padding - Top: ${systemBars.top}, Left: ${systemBars.left}, Right: ${systemBars.right}")
-                view.updatePadding(
-                    top = systemBars.top,
-                    left = systemBars.left,
-                    right = systemBars.right
-                )
-            } else {
-                // Log.d("EdgeToEdgeDebug", "NavHost: Padding already correct.")
-            }
+            // Apply padding to prevent content from going under system bars
+            view.updatePadding(
+                top = systemBars.top,
+                left = systemBars.left,
+                right = systemBars.right,
+                bottom = 0 // Don't add bottom padding; let ad banner handle it
+            )
+
             windowInsets
         }
     }
 
-
     private fun setupAdBannerInsets(adBanner: View) {
         ViewCompat.setOnApplyWindowInsetsListener(adBanner) { view, windowInsets ->
-            val navigationBarsAndIme = windowInsets.getInsets(
-                WindowInsetsCompat.Type.navigationBars() or WindowInsetsCompat.Type.ime()
-            )
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val navigationBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
 
             val currentParams = view.layoutParams as? ViewGroup.MarginLayoutParams
             if (currentParams != null) {
+                // Store original margins
                 val originalMargins = view.tag as? IntArray ?: IntArray(4).apply {
                     this[0] = currentParams.leftMargin
                     this[1] = currentParams.topMargin
@@ -158,70 +195,34 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                     view.tag = this
                 }
 
+                // Calculate new margins
                 val newLeftMargin = originalMargins[0] + systemBars.left
                 val newRightMargin = originalMargins[2] + systemBars.right
-                val newBottomMargin = originalMargins[3] + navigationBarsAndIme.bottom
+                val newBottomMargin = originalMargins[3] + maxOf(navigationBars.bottom, ime.bottom)
 
+                // Only update if changed
                 if (currentParams.leftMargin != newLeftMargin ||
                     currentParams.rightMargin != newRightMargin ||
                     currentParams.bottomMargin != newBottomMargin) {
-                    // Log.d("EdgeToEdgeDebug", "AdBanner: Applying margins - Bottom: $newBottomMargin, Left: $newLeftMargin, Right: $newRightMargin")
+
                     currentParams.leftMargin = newLeftMargin
                     currentParams.rightMargin = newRightMargin
                     currentParams.bottomMargin = newBottomMargin
-                    view.layoutParams = currentParams // Important: Re-assign params
-                } else {
-                    // Log.d("EdgeToEdgeDebug", "AdBanner: Margins already correct.")
+                    view.layoutParams = currentParams
                 }
             }
             windowInsets
         }
     }
 
-    private fun setupSystemBars() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) { // API 28
-            window.attributes.layoutInDisplayCutoutMode =
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { // API 21
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // API 30
-                window.setDecorFitsSystemWindows(false) // Allow content to draw under system bars
-                window.insetsController?.let {
-                    it.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                    it.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                    )
-                    it.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-                    )
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                                or if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR else 0
-                        )
-            }
-        }
-    }
-
-
     private fun startANRWatchDog() {
-//        ANRWatchDog().start()
+        // ANRWatchDog().start()
     }
 
     private fun runInitializationInBackground() {
         val scope = CoroutineScope(Dispatchers.Default)
         scope.launch {
-            AdObject.snackbarContainer= findViewById(R.id.clMainActivity)
+            AdObject.snackbarContainer = findViewById(R.id.clMainActivity)
             loadDataFromAssets()
             setupDB()
             initializeAdobject()
@@ -245,7 +246,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
 
     private fun createBookmarkDir() {
         ItemDataset.APP_DIR = File(filesDir, "bookmarks")
-        ItemDataset.APP_DIR?.let { it.mkdirs() }
+        ItemDataset.APP_DIR?.mkdirs()
     }
 
     private fun loadDataFromAssets() {
@@ -269,21 +270,6 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         NetworkWorker.runNetworkCheckingThread()
     }
 
-
-    /*----------------------ON BACK PRESS FOR THE ACTIVITY AND FRAGMENTS-------------------*/
-
-//    override fun onBackPressed() {
-//        if (isNotLastScreen()) {
-//            fragmentsStack.pop()
-//            loadPreviousFragment()
-//        }else{
-//            FRAGMENT_LOADED = false /*WHEN APP IS GOING INTO BACKGROUND, SET FRAGMENT_LOADED = FALSE*/
-//            AdObject.SPLASH_CALLED = false
-//            exitApplication()
-//        }
-//
-//    }
-
     private fun exitApplication() {
         val a = Intent(Intent.ACTION_MAIN)
         a.addCategory(Intent.CATEGORY_HOME)
@@ -294,32 +280,26 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         finishAffinity()
         exitProcess(0)
     }
+
     private fun isNotLastScreen(): Boolean {
         return fragmentsStack.size > 1
     }
 
     /*--------------------------------------------SCREEN LOADING VIA FRAGMENTS--------------------------------------------------------*/
-    /*-----------------------SCREEN 0 - THE SPLASH SCREEN----------------------*/
     override fun loadSplashScreen() {
-
         if (!AdObject.SPLASH_CALLED) navigateToScreenUsingNagGraph(SplashFragment())
-
     }
 
-
-    /*-----------------------SCREEN 0 - THE TEST MODE SCREEN----------------------*/
     override fun loadTestModeScreen() {
         if (!isFinishing) {
             supportFragmentManager.beginTransaction().apply {
                 replace(R.id.nav_host_fragment, TestModeFragment())
                 commitAllowingStateLoss()
             }
-
             this.loadBannerWithConnectivityCheck()
         }
     }
 
-    /*-----------------------SCREEN 0 - THE MAIN SCREEN----------------------*/
     override fun loadStartScreen() {
         navigateToScreenUsingNagGraph(StartScreenFragment())
         addFragmentToStack(StartScreen)
@@ -330,31 +310,26 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         addFragmentToStack(PrivacyPolicy)
     }
 
-    /*-----------------------SCREEN 1 - THE IMAGE TOPICS----------------------*/
     override fun loadImageTopics() {
         navigateToScreenUsingNagGraph(TopicFragment())
         addFragmentToStack(TOPICS)
     }
 
-    /*---------------------SCREEN 2 - IMAGE MENUS---------------------*/
     override fun loadMenus() {
         navigateToScreenUsingNagGraph(MenuFragment())
         addFragmentToStack(MENUS)
     }
 
-    /*------------------------------SCREEN 3 - THE IMAGE ITEM------------------------*/
     override fun loadItem() {
         navigateToScreenUsingNagGraph(ItemFragment02())
         addFragmentToStack(ITEM)
     }
 
-    /*------------------------------SCREEN 4 - THE BOOK MARK MENU------------------------*/
     override fun loadBookMarkMenu() {
         navigateToScreenUsingNagGraph(BookmarkFragment())
         addFragmentToStack(BookmarkMenu)
     }
 
-    /*------------------------------SCREEN 5 - THE BOOK MARK ITEM------------------------*/
     override fun loadBookMarkItem() {
         navigateToScreenUsingNagGraph(BookMarkItemFragment())
         addFragmentToStack(BookmarkItem)
@@ -364,8 +339,8 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         FRAGMENT_LOADED = true
         fragmentsStack.push(fragmentScreen)
     }
-    private fun navigateToScreenUsingNagGraph(destinationFrag: Fragment) {
 
+    private fun navigateToScreenUsingNagGraph(destinationFrag: Fragment) {
         if (!isFinishing) {
             supportFragmentManager.beginTransaction().apply {
                 replace(R.id.nav_host_fragment, destinationFrag)
@@ -377,11 +352,8 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         }
     }
 
-
-
-
     private fun loadBannerWithConnectivityCheck() {
-        if (AdObject.isNetworkAvailable() and !adBanner.isLoading and !BannerLoaded and !adLimitEnabled) {
+        if (AdObject.isNetworkAvailable() && !adBanner.isLoading && !BannerLoaded && !adLimitEnabled) {
             adBanner.loadAd(AdRequest.Builder().build())
         }
     }
@@ -392,18 +364,12 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                 BannerLoaded = true
             }
 
-
-
             override fun onAdOpened() {
-                // Code to be executed when an ad opens an overlay that
-                // covers the screen.
+                // Code to be executed when an ad opens an overlay
             }
 
-
-
             override fun onAdClosed() {
-                // Code to be executed when when the user is about to return
-                // to the app after tapping on an ad.
+                // Code to be executed when user returns to app
             }
 
             override fun onAdFailedToLoad(error: LoadAdError) {
@@ -413,13 +379,11 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         }
     }
 
-    /*--------------TO RESTORE THE SCREEN STATE ON RESUME---------------*/
     override fun onResume() {
         super.onResume()
         if (AdObject.isTimerInProgress)
             restartTimer()
         resumePausedFragment()
-
     }
 
     private fun resumePausedFragment() {
@@ -434,19 +398,15 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                 BookmarkMenu -> loadBookMarkMenu()
                 PrivacyPolicy -> loadPrivacyPolicy()
             }
-
         } else {
             loadSplashScreen()
         }
     }
-    private fun loadPreviousFragment(){
+
+    private fun loadPreviousFragment() {
         when (fragmentsStack.pop() as String) {
-            StartScreen -> {
-                loadStartScreen()
-            }
-            TOPICS -> {
-                loadImageTopics()
-            }
+            StartScreen -> loadStartScreen()
+            TOPICS -> loadImageTopics()
             MENUS -> loadMenus()
             ITEM -> loadItem()
             BookmarkItem -> loadBookMarkItem()
