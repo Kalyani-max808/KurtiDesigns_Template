@@ -14,24 +14,21 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import com.google.android.gms.ads.AdListener
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.MobileAds
 import com.entertainment.kurtineck.deignss.AdObject.FRAGMENT_LOADED
 import com.entertainment.kurtineck.deignss.AdObject.fragmentsStack
 import com.entertainment.kurtineck.deignss.AdObject.mCountDownTimer
 import com.entertainment.kurtineck.deignss.NetworkWorker.adLimitEnabled
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,8 +37,6 @@ import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), AppInterfaces {
 
-    private lateinit var navController: NavController
-    private lateinit var navHostFragment: NavHostFragment
     private var BannerLoaded = false
     private var DB_NAME = "db_temp01.db"
 
@@ -52,26 +47,26 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     private val BookmarkMenu = "BOOKMARK_MENU"
     private val BookmarkItem = "BOOKMARK_ITEM"
     private val PrivacyPolicy = "PRIVACY_POLICY"
-    private lateinit var adBanner: com.google.android.gms.ads.AdView
+    private lateinit var adBanner: AdView
     private lateinit var clMainActivity: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ STEP 1: Enable edge-to-edge FIRST (Google's recommended way)
+        // Enable edge-to-edge
         enableEdgeToEdge()
 
-        // ✅ STEP 2: Set content view
+        // Set content view
         setContentView(R.layout.activity_main)
 
-        // ✅ STEP 3: Initialize views
+        // Initialize views
         adBanner = findViewById(R.id.adBanner)
         clMainActivity = findViewById(R.id.clMainActivity)
 
-        // ✅ STEP 4: Setup system bars (modern, non-deprecated way)
+        // Setup system bars
         setupSystemBars()
 
-        // ✅ STEP 5: Apply window insets
+        // Apply window insets
         applyWindowInsets()
 
         // Continue with other initialization
@@ -98,7 +93,6 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         })
     }
 
-    // ✅ MODERN, NON-DEPRECATED setupSystemBars()
     private fun setupSystemBars() {
         // Handle display cutouts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -109,9 +103,8 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         // Enable drawing under system bars
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // Modern approach for Android 11+ (API 30+)
-            window.setDecorFitsSystemWindows(false)
             window.insetsController?.let { controller ->
-                controller.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                controller.show(WindowInsets.Type.systemBars() or WindowInsets.Type.navigationBars())
                 controller.setSystemBarsAppearance(
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
                             WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
@@ -121,20 +114,12 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
             }
         } else {
             // For Android 5.0 to Android 10 (API 21-29)
-            // Use WindowCompat instead of deprecated systemUiVisibility
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowCompat.getInsetsController(window, window.decorView)?.let { controller ->
+            WindowCompat.getInsetsController(window, window.decorView).let { controller ->
                 controller.isAppearanceLightStatusBars = true
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     controller.isAppearanceLightNavigationBars = true
                 }
             }
-        }
-
-        // Set system bar colors (transparent for edge-to-edge)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-            window.navigationBarColor = android.graphics.Color.TRANSPARENT
         }
     }
 
@@ -156,8 +141,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     }
 
     private fun setupRootLayoutInsets(rootLayout: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, windowInsets ->
-            // Pass insets down to children
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, windowInsets ->
             windowInsets
         }
     }
@@ -166,12 +150,11 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         ViewCompat.setOnApplyWindowInsetsListener(navHostContainer) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Apply padding to prevent content from going under system bars
             view.updatePadding(
                 top = systemBars.top,
                 left = systemBars.left,
                 right = systemBars.right,
-                bottom = 0 // Don't add bottom padding; let ad banner handle it
+                bottom = 0
             )
 
             windowInsets
@@ -186,7 +169,6 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
 
             val currentParams = view.layoutParams as? ViewGroup.MarginLayoutParams
             if (currentParams != null) {
-                // Store original margins
                 val originalMargins = view.tag as? IntArray ?: IntArray(4).apply {
                     this[0] = currentParams.leftMargin
                     this[1] = currentParams.topMargin
@@ -195,15 +177,14 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                     view.tag = this
                 }
 
-                // Calculate new margins
                 val newLeftMargin = originalMargins[0] + systemBars.left
                 val newRightMargin = originalMargins[2] + systemBars.right
                 val newBottomMargin = originalMargins[3] + maxOf(navigationBars.bottom, ime.bottom)
 
-                // Only update if changed
                 if (currentParams.leftMargin != newLeftMargin ||
                     currentParams.rightMargin != newRightMargin ||
-                    currentParams.bottomMargin != newBottomMargin) {
+                    currentParams.bottomMargin != newBottomMargin
+                ) {
 
                     currentParams.leftMargin = newLeftMargin
                     currentParams.rightMargin = newRightMargin
@@ -237,7 +218,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         ItemDataset.MENU_ID = 1
     }
 
-    private fun getAssetsDBFileName() = packageName.toString().replace(".", "_")
+    private fun getAssetsDBFileName() = packageName.replace(".", "_")
 
     private fun initializeAdobject() {
         AdObject.connectivityManager = applicationContext.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -253,17 +234,12 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         AppUtils().loadGalleryFromAssets(applicationContext)
     }
 
-    private fun initializeNavgraph() {
-        navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController = navHostFragment.navController
-    }
-
     private fun initializeAdmob() {
         MobileAds.initialize(this) {}
     }
 
     private fun setDefaultExceptionHandler() {
-        Thread.setDefaultUncaughtExceptionHandler { t, e -> System.err.println(e.printStackTrace()) }
+        Thread.setDefaultUncaughtExceptionHandler { _, e -> System.err.println(e.printStackTrace()) }
     }
 
     private fun startNetworkMonitoringServiceUsingCoroutines() {
@@ -273,8 +249,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     private fun exitApplication() {
         val a = Intent(Intent.ACTION_MAIN)
         a.addCategory(Intent.CATEGORY_HOME)
-        a.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        a.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        a.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(a)
         finish()
         finishAffinity()
@@ -285,7 +260,6 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         return fragmentsStack.size > 1
     }
 
-    /*--------------------------------------------SCREEN LOADING VIA FRAGMENTS--------------------------------------------------------*/
     override fun loadSplashScreen() {
         if (!AdObject.SPLASH_CALLED) navigateToScreenUsingNagGraph(SplashFragment())
     }
@@ -296,7 +270,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                 replace(R.id.nav_host_fragment, TestModeFragment())
                 commitAllowingStateLoss()
             }
-            this.loadBannerWithConnectivityCheck()
+            loadBannerWithConnectivityCheck()
         }
     }
 
@@ -348,7 +322,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                 addToBackStack(null)
             }
             FRAGMENT_LOADED = true
-            this.loadBannerWithConnectivityCheck()
+            loadBannerWithConnectivityCheck()
         }
     }
 
