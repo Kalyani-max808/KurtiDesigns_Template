@@ -12,20 +12,26 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.viewpager.widget.ViewPager
 import com.entertainment.kurtineck.deignss.AdObject.AD_DISPLAY_SCROLL_COUNT
 import com.entertainment.kurtineck.deignss.AdObject.admob
 import java.io.FileNotFoundException
 import java.io.IOException
 
-class BookMarkItemFragment : androidx.fragment.app.Fragment() {
+class BookMarkItemFragment : Fragment() {
     private var bookMarkItemLayout: View? = null
     private var imgBitmap: Bitmap? = null
     private var mImages: ArrayList<String>? = null
     private var bookmarkItems: ArrayList<String>
 
-    lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    lateinit var vpBookMarkImage: ViewPager
+    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var vpBookMarkImage: ViewPager
     private var vpAdapter: androidx.viewpager.widget.PagerAdapter? = null
     private var mAdCount = 0
     private lateinit var appInterfaces: AppInterfaces
@@ -35,26 +41,18 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
         bookmarkItems = ItemDataset.mDbHelper?.getAllBookMarks() ?: arrayListOf()
         mImages = ItemDataset.mDbHelper?.getAllBookMarks() ?: arrayListOf()
         vpAdapter = mImages?.let { BookMarkImagePagerAdapter(it) }
-
     }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (activity is AppInterfaces) {
-            appInterfaces = activity as AppInterfaces
+        if (context is AppInterfaces) {
+            appInterfaces = context
         }
-
     }
 
-   /* override fun onAttach(activity: Activity) {
-        super.onAttach(activity)
-        if (activity is AppInterfaces) {
-            appInterfaces = activity
-        }
-    }*/
-
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         layoutInit(inflater, container)
@@ -62,8 +60,14 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
         loadViewPager()
         setupToolbarTitle()
         setupViewPagerListener()
-        return bookMarkItemLayout
 
+        // Setup menu (modern way)
+        setupMenu()
+
+        // Setup edge-to-edge support
+        setupEdgeToEdge()
+
+        return bookMarkItemLayout
     }
 
     private fun layoutInit(inflater: LayoutInflater, container: ViewGroup?) {
@@ -75,11 +79,61 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
 
     private fun setupToolbarActions(bookMarkItemLayout: View) {
         val act = activity as AppCompatActivity
-//        act.setSupportActionBar(bookMarkItemLayout.toolbar_bookmarks_item)
         toolbar = bookMarkItemLayout.findViewById(R.id.toolbar_bookmarks_item)
         act.setSupportActionBar(toolbar)
-        setHasOptionsMenu(true)
+    }
 
+    private fun setupMenu() {
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.menu_bookmarks, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                val imgSelected = getSelectedItem()
+                loadBitmapFromAssets(imgSelected)
+                return when (menuItem.itemId) {
+                    R.id.btnWallpaper -> {
+                        setupWallpaper()
+                        true
+                    }
+                    R.id.btnShare -> {
+                        shareImage()
+                        true
+                    }
+                    R.id.btnDelete -> {
+                        deleteBookMarkedImage(imgSelected)
+                        true
+                    }
+                    R.id.btnBookMarksList -> {
+                        loadBookMarkListScreen()
+                        true
+                    }
+                    R.id.btnRate -> {
+                        AppUtils().rateApp(requireContext())
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    private fun setupEdgeToEdge() {
+        bookMarkItemLayout?.let { view ->
+            ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
+                val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+                // Apply padding to toolbar to avoid status bar overlap
+                toolbar.updatePadding(
+                    top = systemBars.top,
+                    left = systemBars.left,
+                    right = systemBars.right
+                )
+
+                windowInsets
+            }
+        }
     }
 
     private fun loadViewPager() {
@@ -92,7 +146,7 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
     }
 
     private fun setupViewPagerListener() {
-        bookMarkItemLayout?.findViewById<ViewPager>(R.id.vpBookMarkImage)?.addOnPageChangeListener(object :
+        vpBookMarkImage.addOnPageChangeListener(object :
             ViewPager.SimpleOnPageChangeListener() {
 
             override fun onPageSelected(position: Int) {
@@ -105,44 +159,10 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
         })
     }
 
-
     private fun loadNextItemWithAds(position: Int) {
         mAdCount++
         if (mAdCount % AD_DISPLAY_SCROLL_COUNT == 0) admob?.loadNextScreen { }
-        ItemDataset.position_bookmark = position //Save the position of the current item
-    }
-
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_bookmarks, menu)
-
-        setHasOptionsMenu(true)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-        var imgSelected = getSelectedItem()
-        loadBitmapFromAssets(imgSelected)
-        when (item.itemId) {
-            R.id.btnWallpaper -> {
-                setupWallpaper()
-            }
-            R.id.btnShare -> {
-                shareImage()
-            }
-            R.id.btnDelete -> {
-                deleteBookMarkedImage(imgSelected)
-            }
-            R.id.btnBookMarksList -> {
-                loadBookMarkListScreen()
-            }
-            R.id.btnRate -> {
-                AppUtils().rateApp(activity as Context)
-            }
-        }
-        return super.onOptionsItemSelected(item)
+        ItemDataset.position_bookmark = position
     }
 
     private fun loadBitmapFromAssets(imgSelected: String) {
@@ -157,28 +177,24 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
         val myWallpaperManager = WallpaperManager.getInstance(context)
         try {
             myWallpaperManager.clear()
-            imgBitmap.let { myWallpaperManager.setBitmap(it) }
+            imgBitmap?.let { myWallpaperManager.setBitmap(it) }
             Toast.makeText(
-                context,
-                "Wallpaper Set Successfully!!", Toast.LENGTH_SHORT
-            )
-                .show()
-
+                requireContext(),
+                "Wallpaper Set Successfully!!",
+                Toast.LENGTH_SHORT
+            ).show()
         } catch (e: IOException) {
             Toast.makeText(
-                context,
-                "Setting WallPaper Failed!!", Toast.LENGTH_SHORT
-            )
-                .show()
-
+                requireContext(),
+                "Setting WallPaper Failed!!",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
     private fun shareImage() {
-        imgBitmap.let {
-            if (it != null) {
-                AppUtils().shareImage(it, context as Context)
-            }
+        imgBitmap?.let {
+            AppUtils().shareImage(it, requireContext())
         }
     }
 
@@ -201,13 +217,12 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
         }
     }
 
-
     private fun isBookmarkListNotEmpty() = mImages?.isNotEmpty() ?: false
 
     private fun showItemScreen() {
-        AdObject.fragmentsStack.pop() //remove the entry for - BookMarkItemFragment
-        AdObject.fragmentsStack.pop() //remove the entry for - BookMarkFragment
-        appInterfaces.loadItem() //Load the Image Menus
+        AdObject.fragmentsStack.pop() // Remove BookMarkItemFragment
+        AdObject.fragmentsStack.pop() // Remove BookMarkFragment
+        appInterfaces.loadItem()
     }
 
     private fun loadBookmarkItems() {
@@ -221,7 +236,6 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
     }
 
     private fun showImageDeletedMessage(imgSelected: String) {
-//        AppUtils().showSnackbarMsg("Deleted $imgSelected Successfully.")
         AppUtils().showSneakerMsg(requireActivity(), "Deleted $imgSelected Successfully.")
     }
 
@@ -253,7 +267,7 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
 
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
             val itemView = mLayoutInflater.inflate(R.layout.pager_item, container, false)
-            val iconPath = AppUtils().getItemImagePath(mImages,position)
+            val iconPath = AppUtils().getItemImagePath(mImages, position)
             loadImageIntoView(itemView, iconPath.toString(), container)
             return itemView
         }
@@ -270,11 +284,9 @@ class BookMarkItemFragment : androidx.fragment.app.Fragment() {
     ) {
         val imgHolder = itemView.findViewById<ImageView>(R.id.suit_image)
         imgHolder.setImageURI(iconPath.toUri())
-        AppUtils().setupPinchZoom( itemView,iconPath,container) /*New PinchZoom*/
+        AppUtils().setupPinchZoom(itemView, iconPath, container)
     }
 
     private fun getIconPath(position: Int) =
         ItemDataset.ASSET_URI + (mImages?.elementAt(position) ?: 0)
-
-
 }
