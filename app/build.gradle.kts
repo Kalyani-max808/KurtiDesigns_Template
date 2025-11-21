@@ -52,7 +52,8 @@ dependencies {
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.gson)
-
+    implementation(libs.androidx.core.ktx)
+//    implementation(libs.androidx.activity.ac)
     implementation(libs.androidx.cardview)
     // Admob Ads
     implementation(libs.play.services.ads)
