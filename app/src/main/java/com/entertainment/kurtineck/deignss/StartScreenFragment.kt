@@ -1,52 +1,81 @@
 package com.entertainment.kurtineck.deignss
 
-
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 
-class StartScreenFragment : androidx.fragment.app.Fragment() {
-    lateinit var act:AppInterfaces
+class StartScreenFragment : Fragment() {
+    private lateinit var act: AppInterfaces
+    private lateinit var startScreen: View
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is AppInterfaces) {
+            act = context
+        }
+    }
 
-        // Inflate the rate_me_layout for this fragment
-//        val v = inflater.inflate(R.layout.fragment_start_screen, container, false)
-        val startScreen = inflater.inflate(R.layout.fragment_start_screen, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout
+        startScreen = inflater.inflate(R.layout.fragment_start_screen, container, false)
+
+        // Initialize views
         val btnGallery03 = startScreen.findViewById<View>(R.id.btnGallery03)
         val btnGalleryLayout03 = startScreen.findViewById<View>(R.id.btnGalleryLayout03)
         val imgBtnRateMe03 = startScreen.findViewById<View>(R.id.imgBtnRateMe03)
         val imgBtnShare03 = startScreen.findViewById<View>(R.id.imgBtnShare03)
         val tvPrivacy03 = startScreen.findViewById<View>(R.id.tvPrivacy03)
 
+        // Setup click listeners
         btnGalleryLayout03.setOnClickListener {
             AdObject.admob?.loadNextScreen { act.loadImageTopics() }
         }
+
         btnGallery03.setOnClickListener {
             AdObject.admob?.loadNextScreen { act.loadImageTopics() }
         }
+
         imgBtnRateMe03.setOnClickListener {
-            AppUtils().rateApp(context as Context)
+            AppUtils().rateApp(requireContext())
         }
-        imgBtnShare03.setOnClickListener(View.OnClickListener {
-            AppUtils().shareApp(context as Context)
-        })
+
+        imgBtnShare03.setOnClickListener {
+            AppUtils().shareApp(requireContext())
+        }
 
         tvPrivacy03.setOnClickListener {
-            AdObject.admob?.loadNextScreen{act.loadPrivacyPolicy()}
+            AdObject.admob?.loadNextScreen { act.loadPrivacyPolicy() }
         }
 
+        // Setup edge-to-edge support
+        setupEdgeToEdge()
 
         return startScreen
     }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is AppInterfaces){
-            act = context
+    private fun setupEdgeToEdge() {
+        ViewCompat.setOnApplyWindowInsetsListener(startScreen) { view, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Apply padding to the root view to avoid system bars
+//            view.updatePadding(
+//                top = systemBars.top,
+//                left = systemBars.left,
+//                right = systemBars.right,
+//                bottom = systemBars.bottom
+//            )
+
+            windowInsets
         }
     }
 }

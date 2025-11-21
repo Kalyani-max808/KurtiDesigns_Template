@@ -1,49 +1,67 @@
 package com.entertainment.kurtineck.deignss
 
-
-import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class TopicFragment : androidx.fragment.app.Fragment() {
-    // TODO: Rename and change types of parameters
-    private lateinit var appInterfaces:AppInterfaces
-    override fun onAttach(activity: Activity) {
-        super.onAttach(activity)
-        if (activity is AppInterfaces){ appInterfaces = activity }
+class TopicFragment : Fragment() {
+    private lateinit var appInterfaces: AppInterfaces
+    private lateinit var rootView: View
+    private lateinit var rvJokeHeader: RecyclerView
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is AppInterfaces) {
+            appInterfaces = context
+        }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        // Inflate the rate_me_layout for this fragment
-        val v:View = inflater.inflate(R.layout.fragment_topics, container, false)
-        val rvJokeHeader = v.findViewById<RecyclerView>(R.id.rvJokeHeader)
-        //RecyclerView Logic
-//        v.tvHeader.text = "${ItemDataset.items.size} Categories loaded.."
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout
+        rootView = inflater.inflate(R.layout.fragment_topics, container, false)
 
+        // Initialize RecyclerView
+        rvJokeHeader = rootView.findViewById(R.id.rvJokeHeader)
+
+        // Setup RecyclerView
         rvJokeHeader.apply {
-//            layoutManager = GridAutofitLayoutManager(activity as Context, AdObject.GRID_IMAGE_WIDTH, LinearLayoutManager.VERTICAL, false)
-            layoutManager = GridLayoutManager(requireContext(),1)
-            adapter = TopicAdapter(context, activity,appInterfaces)
+            layoutManager = GridLayoutManager(requireContext(), 1)
+            adapter = TopicAdapter(requireContext(), requireActivity(), appInterfaces)
             setHasFixedSize(true)
             setItemViewCacheSize(10)
-            //            layoutManager = LinearLayoutManager(activity as Context)
-
-//            addItemDecoration(BoundaryItemDecoration(context,Color.BLUE,5))
-//            addItemDecoration(CustomItemDecoration(spacing = 10,includeEdge = false))
         }
 
-//        /*Change the number of columns based on screen orientation*/
-//        if (activity!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-//            rv.layoutManager=GridAutofitLayoutManager(activity as Context,500,LinearLayoutManager.VERTICAL,false)
-//        } else {
-//            rv.layoutManager=GridLayoutManager(activity, 1, GridLayoutManager.HORIZONTAL, false)
-////            rv.layoutManager=GridAutofitLayoutManager(activity as Context,500,LinearLayoutManager.HORIZONTAL,false)
-//        }
-        return v
+        // Setup edge-to-edge support
+        setupEdgeToEdge()
+
+        return rootView
+    }
+
+    private fun setupEdgeToEdge() {
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Apply padding to RecyclerView to avoid system bars
+//            rvJokeHeader.updatePadding(
+//                top = systemBars.top,
+//                left = systemBars.left,
+//                right = systemBars.right,
+//                bottom = systemBars.bottom
+//            )
+
+            windowInsets
+        }
     }
 }
