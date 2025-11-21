@@ -311,19 +311,7 @@ private fun prepareForFullscreenAd(ctx: FragmentActivity?) {
                     it.hide(WindowInsets.Type.systemBars())
                     it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 }
-            } else {
-                // Fallback for older versions
-                @Suppress("DEPRECATION")
-                activity.window.decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        )
             }
-
             Log.d(TAG, "Prepared UI for fullscreen ad")
         } catch (e: Exception) {
             Log.e(TAG, "Error preparing for fullscreen ad: ${e.message}")
@@ -345,16 +333,7 @@ private fun reapplyWindowInsets(ctx: FragmentActivity?) {
                     it.show(WindowInsets.Type.systemBars())
                     it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_DEFAULT
                 }
-            } else {
-                // Restore edge-to-edge for older versions
-                @Suppress("DEPRECATION")
-                activity.window.decorView.systemUiVisibility = (
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        )
             }
-
             // Trigger insets reapplication with proper error handling
             val rootView = activity.findViewById<ConstraintLayout>(R.id.clMainActivity)
             if (rootView != null) {
