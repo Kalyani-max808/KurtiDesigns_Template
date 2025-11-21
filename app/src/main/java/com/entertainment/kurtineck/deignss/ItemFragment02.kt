@@ -12,6 +12,9 @@ import android.widget.LinearLayout
 import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.snackbar.Snackbar
 import com.entertainment.kurtineck.deignss.AdObject.AD_DISPLAY_SCROLL_COUNT
@@ -45,13 +48,6 @@ class ItemFragment02 : androidx.fragment.app.Fragment() {
 
     }
 
-   /* override fun onAttach(activity: Activity) {
-        super.onAttach(activity)
-        if (activity is AppInterfaces) {
-            appInterfaces = activity
-        }
-    }*/
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -61,6 +57,9 @@ class ItemFragment02 : androidx.fragment.app.Fragment() {
         loadViewPager()
         setupToolbarTitle()
         setupViewPagerListener()
+
+        setupEdgeToEdge()
+
         return itemLayout
 
     }
@@ -260,6 +259,22 @@ class ItemFragment02 : androidx.fragment.app.Fragment() {
          appInterfaces.loadMenus()
      }
         return iconPath
+    }
+
+    private fun setupEdgeToEdge() {
+        itemLayout?.let { view ->
+            ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
+                val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+                toolbar.updatePadding(
+                    top = systemBars.top,
+                    left = systemBars.left,
+                    right = systemBars.right
+                )
+
+                windowInsets
+            }
+        }
     }
 
 
