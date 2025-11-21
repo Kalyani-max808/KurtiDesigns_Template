@@ -304,7 +304,7 @@ private fun prepareForFullscreenAd(ctx: FragmentActivity?) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 // Modern approach - just ensure immersive mode
-                activity.window.setDecorFitsSystemWindows(false)
+//                activity.window.setDecorFitsSystemWindows(false)
 
                 val controller = activity.window.insetsController
                 controller?.let {
@@ -326,7 +326,7 @@ private fun reapplyWindowInsets(ctx: FragmentActivity?) {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 // Restore edge-to-edge with system bars visible
-                activity.window.setDecorFitsSystemWindows(false)
+//                activity.window.setDecorFitsSystemWindows(false)
 
                 val controller = activity.window.insetsController
                 controller?.let {
