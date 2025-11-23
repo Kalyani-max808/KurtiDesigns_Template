@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -16,7 +17,7 @@ class TopicFragment : Fragment() {
     private lateinit var appInterfaces: AppInterfaces
     private lateinit var rootView: View
     private lateinit var rvJokeHeader: RecyclerView
-
+    private lateinit var tvHeader: TextView
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is AppInterfaces) {
@@ -34,6 +35,10 @@ class TopicFragment : Fragment() {
 
         // Initialize RecyclerView
         rvJokeHeader = rootView.findViewById(R.id.rvJokeHeader)
+
+        // Initialize TextView
+        tvHeader = rootView.findViewById(R.id.tvHeader)
+
 
         // Setup RecyclerView
         rvJokeHeader.apply {
@@ -53,13 +58,19 @@ class TopicFragment : Fragment() {
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Apply padding to RecyclerView to avoid system bars
-//            rvJokeHeader.updatePadding(
-//                top = systemBars.top,
-//                left = systemBars.left,
-//                right = systemBars.right,
-//                bottom = systemBars.bottom
-//            )
+            // ✅ 1. Header gets TOP padding (Status Bar)
+            tvHeader.updatePadding(
+                top = tvHeader.paddingTop + systemBars.top,
+                left = systemBars.left,
+                right = systemBars.right
+            )
+
+            // ✅ 2. RecyclerView gets BOTTOM padding (Navigation Bar)
+            rvJokeHeader.updatePadding(
+                left = systemBars.left,
+                right = systemBars.right,
+                bottom = systemBars.bottom
+            )
 
             windowInsets
         }

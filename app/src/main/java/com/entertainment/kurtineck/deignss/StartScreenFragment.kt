@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 class StartScreenFragment : Fragment() {
     private lateinit var act: AppInterfaces
     private lateinit var startScreen: View
+    private lateinit var tvStartHeader: TextView
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -35,7 +37,7 @@ class StartScreenFragment : Fragment() {
         val imgBtnRateMe03 = startScreen.findViewById<View>(R.id.imgBtnRateMe03)
         val imgBtnShare03 = startScreen.findViewById<View>(R.id.imgBtnShare03)
         val tvPrivacy03 = startScreen.findViewById<View>(R.id.tvPrivacy03)
-
+        tvStartHeader = startScreen.findViewById<TextView>(R.id.tvStartHeader)
         // Setup click listeners
         btnGalleryLayout03.setOnClickListener {
             AdObject.admob?.loadNextScreen { act.loadImageTopics() }
@@ -67,13 +69,11 @@ class StartScreenFragment : Fragment() {
         ViewCompat.setOnApplyWindowInsetsListener(startScreen) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Apply padding to the root view to avoid system bars
-//            view.updatePadding(
-//                top = systemBars.top,
-//                left = systemBars.left,
-//                right = systemBars.right,
-//                bottom = systemBars.bottom
-//            )
+            tvStartHeader.updatePadding(
+                top = tvStartHeader.paddingTop + systemBars.top,
+                left = systemBars.left,
+                right = systemBars.right
+            )
 
             windowInsets
         }

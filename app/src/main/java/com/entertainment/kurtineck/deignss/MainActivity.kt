@@ -159,12 +159,12 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
                         WindowInsetsCompat.Type.displayCutout()
             )
 
-            view.updatePadding(
-                top = bars.top,
-                left = bars.left,
-                right = bars.right,
-                bottom = 0 // Let ad banner handle bottom padding
-            )
+//            view.updatePadding(
+//                top = bars.top,
+//                left = bars.left,
+//                right = bars.right,
+//                bottom = 0 // Let ad banner handle bottom padding
+//            )
 
             windowInsets
         }
