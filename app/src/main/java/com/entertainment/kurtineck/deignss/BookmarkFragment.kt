@@ -53,6 +53,9 @@ class BookmarkFragment : Fragment() {
             setHasFixedSize(true)
             layoutManager = GridLayoutManager(requireContext(), 2)
             adapter = BookMarkAdapter(requireContext(), requireActivity(), appInterfaces)
+
+            // ✅ Allow content to scroll behind navigation bars
+            clipToPadding = false
         }
 
         // ✅ Setup edge-to-edge support
@@ -62,21 +65,30 @@ class BookmarkFragment : Fragment() {
     }
 
     private fun setupEdgeToEdge() {
+        // ✅ Capture initial padding values to prevent accumulation on multiple calls
+        val headerInitialTop = tvBookMarkTitle.paddingTop
+        val headerInitialLeft = tvBookMarkTitle.paddingLeft
+        val headerInitialRight = tvBookMarkTitle.paddingRight
+
+        val rvInitialLeft = rvBookMarks.paddingLeft
+        val rvInitialRight = rvBookMarks.paddingRight
+        val rvInitialBottom = rvBookMarks.paddingBottom
+
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Apply padding to header (top, left, right)
+            // Apply padding to header (top, left, right) using initial values
             tvBookMarkTitle.updatePadding(
-                top = tvBookMarkTitle.paddingTop + systemBars.top,
-                left = systemBars.left,
-                right = systemBars.right
+                top = headerInitialTop + systemBars.top,
+                left = headerInitialLeft + systemBars.left,
+                right = headerInitialRight + systemBars.right
             )
 
-            // Apply padding to RecyclerView (left, right, bottom)
+            // Apply padding to RecyclerView (left, right, bottom) using initial values
             rvBookMarks.updatePadding(
-                left = systemBars.left,
-                right = systemBars.right,
-                bottom = systemBars.bottom
+                left = rvInitialLeft + systemBars.left,
+                right = rvInitialRight + systemBars.right,
+                bottom = rvInitialBottom + systemBars.bottom
             )
 
             windowInsets

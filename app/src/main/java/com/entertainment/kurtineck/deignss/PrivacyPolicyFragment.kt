@@ -1,7 +1,6 @@
 package com.entertainment.kurtineck.deignss
 
-
-import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.Html
@@ -9,29 +8,87 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 import com.jaredrummler.html.*
 import java.io.IOException
 
+class PrivacyPolicyFragment : Fragment() {
+    private lateinit var appInterfaces: AppInterfaces
+    private lateinit var rootView: View
+    private lateinit var tvPVtextView: TextView
+    private lateinit var tvHeader: TextView // ✅ Added Header
 
-class PrivacyPolicyFragment : androidx.fragment.app.Fragment() {
-    private lateinit var appInterfaces:AppInterfaces
-    override fun onAttach(activity: Activity) {
-        super.onAttach(activity)
-        if (activity is AppInterfaces){ appInterfaces = activity }
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        if (context is AppInterfaces) {
+            appInterfaces = context
+        }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        // Inflate the rate_me_layout for this fragment
-        val v = inflater.inflate(R.layout.fragment_privacy, container, false)
-//        loadPrivacyPolicyText(v.tvPVtextView)
-        setupPrivacyPolicy(v)
-        return v
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout
+        rootView = inflater.inflate(R.layout.fragment_privacy, container, false)
+
+        // Initialize Views
+        tvPVtextView = rootView.findViewById(R.id.tvPVtextView)
+        tvHeader = rootView.findViewById(R.id.tvPrivacyHeader) // ✅ Initialize Header
+
+        // Setup Content
+        setupPrivacyPolicy(rootView)
+
+        // ✅ Setup edge-to-edge support
+        setupEdgeToEdge()
+
+        return rootView
     }
-    //https://github.com/jaredrummler/HtmlDsl
+
+    private fun setupEdgeToEdge() {
+        // ✅ Capture initial padding values to prevent accumulation
+        val headerInitialTop = tvHeader.paddingTop
+        val headerInitialLeft = tvHeader.paddingLeft
+        val headerInitialRight = tvHeader.paddingRight
+
+        val contentInitialLeft = tvPVtextView.paddingLeft
+        val contentInitialRight = tvPVtextView.paddingRight
+        val contentInitialBottom = tvPVtextView.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
+            val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // 1. Header: Apply Top Padding (Status Bar)
+            tvHeader.updatePadding(
+                top = headerInitialTop + systemBars.top,
+                left = headerInitialLeft + systemBars.left,
+                right = headerInitialRight + systemBars.right
+            )
+
+            // 2. Content: Apply Bottom Padding (Nav Bar + Ad Space)
+            // Adding ~60dp for the Ad Banner so text isn't hidden behind it
+            val adHeightEstimate = (60 * resources.displayMetrics.density).toInt()
+
+            tvPVtextView.updatePadding(
+                left = contentInitialLeft + systemBars.left,
+                right = contentInitialRight + systemBars.right,
+                bottom = contentInitialBottom + systemBars.bottom + adHeightEstimate
+            )
+
+            windowInsets
+        }
+    }
+
+    // https://github.com/jaredrummler/HtmlDsl
     private fun setupPrivacyPolicy(v: View) {
         v.findViewById<TextView>(R.id.tvPVtextView).setHtml {
-             div(align = Attribute.Align.CENTER,{ h1("Privacy Policy").br() })
+            // Note: You might want to remove this h1 since you now have a native header
+            div(align = Attribute.Align.CENTER, { h1("Privacy Policy").br() })
+
             p("Mindgame built the MindGameApps app as a Free app. This SERVICE is provided by Mindgame at no cost and is intended for use as is.").br()
             p("This page is used to inform visitors regarding my policies with the collection, use, and disclosure of Personal Information if anyone decided to use my Service.").br()
             p("If you choose to use my Service, then you agree to the collection and use of information in relation to this policy. The Personal Information that I collect is used for providing and improving the Service. I will not use or share your information with anyone except as described in this Privacy Policy.").br()
@@ -86,6 +143,7 @@ class PrivacyPolicyFragment : androidx.fragment.app.Fragment() {
             p("These terms and conditions are effective as of 14-10-2021.").br()
         }
     }
+
     private fun loadPrivacyPolicyText(tvPVtextView: TextView) {
         try {
             val privacy_policy_file_name = "privacy_policy.html"
@@ -99,12 +157,12 @@ class PrivacyPolicyFragment : androidx.fragment.app.Fragment() {
             exception.printStackTrace()
         }
     }
-    private fun TextView.htmlText(text: String){
+
+    private fun TextView.htmlText(text: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY))
         } else {
             setText(Html.fromHtml(text))
         }
     }
-
 }

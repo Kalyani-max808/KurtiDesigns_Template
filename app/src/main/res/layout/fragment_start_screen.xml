@@ -1,10 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:weightSum="100"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
 
+    <!-- Header: Fixed Height -->
     <TextView
         android:id="@+id/tvStartHeader"
         android:layout_width="match_parent"
@@ -15,64 +15,75 @@
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="@color/LightYellow"
-        android:textStyle="bold"/>
+        android:textStyle="bold"
+        android:padding="16dp"/>
 
+    <!-- Gallery: Takes all REMAINING space (weight=1) -->
     <LinearLayout
         android:id="@+id/btnGalleryLayout03"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="98"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical"
         android:background="@color/WhiteSmoke">
+
         <ImageButton
             android:id="@+id/btnGallery03"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
             android:background="@drawable/gallery"
-            android:layout_gravity="center|center_horizontal"
+            android:layout_gravity="center"
+            android:contentDescription="@string/app_name"
             android:cropToPadding="true"/>
     </LinearLayout>
 
+    <!-- Rate/Share: Fixed Height -->
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         android:background="@color/colorAccent">
+
         <ImageButton
             android:id="@+id/imgBtnRateMe03"
-            android:layout_width="match_parent"
-            android:background="@color/colorAccent"
-            android:layout_weight="50"
-            android:layout_gravity="center_horizontal"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/btn_rate"/>
+            android:layout_weight="1"
+            android:background="@color/colorAccent"
+            android:src="@drawable/btn_rate"
+            android:contentDescription="Rate App"/>
+
         <ImageButton
             android:id="@+id/imgBtnShare03"
-            android:layout_width="match_parent"
-            android:background="@color/colorAccent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="50"
-            android:layout_gravity="center_horizontal"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/btn_share"/>
+            android:layout_weight="1"
+            android:background="@color/colorAccent"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/btn_share"
+            android:contentDescription="Share App"/>
 
     </LinearLayout>
 
+    <!-- Privacy: Fixed Height (Sits at bottom) -->
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_weight="02"
         android:orientation="vertical"
         android:background="@color/LightYellow">
+
         <TextView
             android:id="@+id/tvPrivacy03"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center|bottom"
+            android:gravity="center"
+            android:padding="16dp"
             android:autoLink="web"
             android:linksClickable="false"
             android:text="@string/terms_privacy"

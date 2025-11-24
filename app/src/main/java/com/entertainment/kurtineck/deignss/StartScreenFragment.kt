@@ -15,6 +15,7 @@ class StartScreenFragment : Fragment() {
     private lateinit var act: AppInterfaces
     private lateinit var startScreen: View
     private lateinit var tvStartHeader: TextView
+    private lateinit var tvPrivacy03: TextView // ✅ Added property
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -36,8 +37,9 @@ class StartScreenFragment : Fragment() {
         val btnGalleryLayout03 = startScreen.findViewById<View>(R.id.btnGalleryLayout03)
         val imgBtnRateMe03 = startScreen.findViewById<View>(R.id.imgBtnRateMe03)
         val imgBtnShare03 = startScreen.findViewById<View>(R.id.imgBtnShare03)
-        val tvPrivacy03 = startScreen.findViewById<View>(R.id.tvPrivacy03)
-        tvStartHeader = startScreen.findViewById<TextView>(R.id.tvStartHeader)
+
+        tvPrivacy03 = startScreen.findViewById(R.id.tvPrivacy03) // ✅ Initialize
+        tvStartHeader = startScreen.findViewById(R.id.tvStartHeader)
 
         // Setup click listeners
         btnGalleryLayout03.setOnClickListener {
@@ -67,19 +69,30 @@ class StartScreenFragment : Fragment() {
     }
 
     private fun setupEdgeToEdge() {
-        // Capture initial padding from XML layout
-        val initialTop = tvStartHeader.paddingTop
-        val initialLeft = tvStartHeader.paddingLeft
-        val initialRight = tvStartHeader.paddingRight
+        // ✅ Capture initial padding values to prevent accumulation
+        val headerInitialTop = tvStartHeader.paddingTop
+        val headerInitialLeft = tvStartHeader.paddingLeft
+        val headerInitialRight = tvStartHeader.paddingRight
+
+        val privacyInitialBottom = tvPrivacy03.paddingBottom
 
         ViewCompat.setOnApplyWindowInsetsListener(startScreen) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Use initial padding + inset (prevents accumulation)
+            // 1. Header: Top Padding (Status Bar)
             tvStartHeader.updatePadding(
-                top = initialTop + systemBars.top,
-                left = initialLeft + systemBars.left,
-                right = initialRight + systemBars.right
+                top = headerInitialTop + systemBars.top,
+                left = headerInitialLeft + systemBars.left,
+                right = headerInitialRight + systemBars.right
+            )
+
+            // 2. Privacy Text: Bottom Padding (Nav Bar + Ad Banner Space)
+            // We add systemBars.bottom (Nav Bar) + 60dp (Approx Ad Banner Height)
+            // to ensure the text is visible ABOVE the ad.
+            val adHeightEstimate = (60 * resources.displayMetrics.density).toInt()
+
+            tvPrivacy03.updatePadding(
+                bottom = privacyInitialBottom + systemBars.bottom + adHeightEstimate
             )
 
             windowInsets
