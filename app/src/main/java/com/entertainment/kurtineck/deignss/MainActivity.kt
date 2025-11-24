@@ -66,6 +66,9 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         adBanner = findViewById(R.id.adBanner)
         clMainActivity = findViewById(R.id.clMainActivity)
 
+        // ✅ Hide Banner by default until loaded
+        adBanner.visibility = View.GONE
+
         // ✅ STEP 4: Enable backward compatible inset dispatching
         ViewGroupCompat.installCompatInsetsDispatch(clMainActivity as ViewGroup)
 
@@ -236,8 +239,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         }
     }
 
-    // ... Rest of your existing methods (startANRWatchDog, runInitializationInBackground, etc.) ...
-    // Keep them exactly as they were in your previous code
+    // ... Rest of your existing methods ...
 
     private fun startANRWatchDog() { /* ... */ }
     private fun runInitializationInBackground() {
@@ -355,17 +357,28 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
             adBanner.loadAd(AdRequest.Builder().build())
         }
     }
+
+    // ✅ UPDATED: Setup Banner Listeners to handle Visibility
     private fun setupBannerAdListeners() {
         adBanner.adListener = object : AdListener() {
-            override fun onAdLoaded() { BannerLoaded = true }
+            override fun onAdLoaded() {
+                BannerLoaded = true
+                // ✅ Show Banner when loaded
+                adBanner.visibility = View.VISIBLE
+            }
+
             override fun onAdOpened() {}
             override fun onAdClosed() {}
+
             override fun onAdFailedToLoad(error: LoadAdError) {
                 super.onAdFailedToLoad(error)
+                // ✅ Hide Banner if failed
+                adBanner.visibility = View.GONE
                 AppUtils().showSnackbarMsg("Banner failed to load.${error.message}")
             }
         }
     }
+
     override fun onResume() {
         super.onResume()
         if (AdObject.isTimerInProgress) restartTimer()
