@@ -38,6 +38,7 @@ class StartScreenFragment : Fragment() {
         val imgBtnShare03 = startScreen.findViewById<View>(R.id.imgBtnShare03)
         val tvPrivacy03 = startScreen.findViewById<View>(R.id.tvPrivacy03)
         tvStartHeader = startScreen.findViewById<TextView>(R.id.tvStartHeader)
+
         // Setup click listeners
         btnGalleryLayout03.setOnClickListener {
             AdObject.admob?.loadNextScreen { act.loadImageTopics() }
@@ -66,13 +67,19 @@ class StartScreenFragment : Fragment() {
     }
 
     private fun setupEdgeToEdge() {
+        // Capture initial padding from XML layout
+        val initialTop = tvStartHeader.paddingTop
+        val initialLeft = tvStartHeader.paddingLeft
+        val initialRight = tvStartHeader.paddingRight
+
         ViewCompat.setOnApplyWindowInsetsListener(startScreen) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
+            // Use initial padding + inset (prevents accumulation)
             tvStartHeader.updatePadding(
-                top = tvStartHeader.paddingTop + systemBars.top,
-                left = systemBars.left,
-                right = systemBars.right
+                top = initialTop + systemBars.top,
+                left = initialLeft + systemBars.left,
+                right = initialRight + systemBars.right
             )
 
             windowInsets

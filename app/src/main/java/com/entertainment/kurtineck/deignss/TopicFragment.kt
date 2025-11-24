@@ -16,8 +16,9 @@ import androidx.recyclerview.widget.RecyclerView
 class TopicFragment : Fragment() {
     private lateinit var appInterfaces: AppInterfaces
     private lateinit var rootView: View
-    private lateinit var rvJokeHeader: RecyclerView
-    private lateinit var tvHeader: TextView
+    private lateinit var rvTopicItems: RecyclerView
+    private lateinit var tvTopicHeader: TextView
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is AppInterfaces) {
@@ -33,19 +34,19 @@ class TopicFragment : Fragment() {
         // Inflate the layout
         rootView = inflater.inflate(R.layout.fragment_topics, container, false)
 
-        // Initialize RecyclerView
-        rvJokeHeader = rootView.findViewById(R.id.rvJokeHeader)
-
-        // Initialize TextView
-        tvHeader = rootView.findViewById(R.id.tvHeader)
-
+        // Initialize Views
+        rvTopicItems = rootView.findViewById(R.id.rvTopicItems)
+        tvTopicHeader = rootView.findViewById(R.id.tvTopicHeader)
 
         // Setup RecyclerView
-        rvJokeHeader.apply {
+        rvTopicItems.apply {
             layoutManager = GridLayoutManager(requireContext(), 1)
             adapter = TopicAdapter(requireContext(), requireActivity(), appInterfaces)
             setHasFixedSize(true)
             setItemViewCacheSize(10)
+
+            // Ensure content scrolls behind navigation bars
+            clipToPadding = false
         }
 
         // Setup edge-to-edge support
@@ -55,21 +56,30 @@ class TopicFragment : Fragment() {
     }
 
     private fun setupEdgeToEdge() {
+        // Capture initial padding values to prevent accumulation
+        val headerInitialTop = tvTopicHeader.paddingTop
+        val headerInitialLeft = tvTopicHeader.paddingLeft
+        val headerInitialRight = tvTopicHeader.paddingRight
+
+        val rvInitialLeft = rvTopicItems.paddingLeft
+        val rvInitialRight = rvTopicItems.paddingRight
+        val rvInitialBottom = rvTopicItems.paddingBottom
+
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
             // ✅ 1. Header gets TOP padding (Status Bar)
-            tvHeader.updatePadding(
-                top = tvHeader.paddingTop + systemBars.top,
-                left = systemBars.left,
-                right = systemBars.right
+            tvTopicHeader.updatePadding(
+                top = headerInitialTop + systemBars.top,
+                left = headerInitialLeft + systemBars.left,
+                right = headerInitialRight + systemBars.right
             )
 
             // ✅ 2. RecyclerView gets BOTTOM padding (Navigation Bar)
-            rvJokeHeader.updatePadding(
-                left = systemBars.left,
-                right = systemBars.right,
-                bottom = systemBars.bottom
+            rvTopicItems.updatePadding(
+                left = rvInitialLeft + systemBars.left,
+                right = rvInitialRight + systemBars.right,
+                bottom = rvInitialBottom + systemBars.bottom
             )
 
             windowInsets

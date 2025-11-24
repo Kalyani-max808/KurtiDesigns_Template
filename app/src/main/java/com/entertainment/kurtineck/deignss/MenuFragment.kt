@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 class MenuFragment : Fragment() {
     private lateinit var appInterfaces: AppInterfaces
     private lateinit var rootView: View
-    private lateinit var tvHeader: TextView
-    private lateinit var rvMenuHeader: RecyclerView
+    private lateinit var tvMenuHeader: TextView
+    private lateinit var rvMenuItems: RecyclerView
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -25,7 +25,6 @@ class MenuFragment : Fragment() {
             appInterfaces = context
         }
     }
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,18 +35,21 @@ class MenuFragment : Fragment() {
         rootView = inflater.inflate(R.layout.fragment_menu, container, false)
 
         // Initialize views
-        tvHeader = rootView.findViewById(R.id.tvHeader)
-        rvMenuHeader = rootView.findViewById(R.id.rvMenuHeader)
+        tvMenuHeader = rootView.findViewById(R.id.tvMenuHeader)
+        rvMenuItems = rootView.findViewById(R.id.rvMenuItems)
 
         // Setup header text
-        tvHeader.text = ItemDataset.item_current?.topic_title ?: ""
+        tvMenuHeader.text = ItemDataset.item_current?.topic_title ?: ""
 
         // Setup RecyclerView
-        rvMenuHeader.apply {
+        rvMenuItems.apply {
             setHasFixedSize(true)
             layoutManager = GridLayoutManager(requireContext(), 2)
-            adapter = MenuAdapter(context, activity, appInterfaces)
+            adapter = MenuAdapter(requireContext(), requireActivity(), appInterfaces)
             setItemViewCacheSize(100)
+
+            // Ensure content scrolls behind navigation bars
+            clipToPadding = false
         }
 
         // ✅ Setup edge-to-edge support
@@ -57,21 +59,30 @@ class MenuFragment : Fragment() {
     }
 
     private fun setupEdgeToEdge() {
+        // Capture initial padding values to prevent accumulation
+        val headerInitialTop = tvMenuHeader.paddingTop
+        val headerInitialLeft = tvMenuHeader.paddingLeft
+        val headerInitialRight = tvMenuHeader.paddingRight
+
+        val rvInitialLeft = rvMenuItems.paddingLeft
+        val rvInitialRight = rvMenuItems.paddingRight
+        val rvInitialBottom = rvMenuItems.paddingBottom
+
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { view, windowInsets ->
             val systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
 
-            // Apply padding to header (top, left, right)
-            tvHeader.updatePadding(
-                top = tvHeader.paddingTop + systemBars.top,
-                left = systemBars.left,
-                right = systemBars.right
+            // Apply padding to header (top, left, right) using initial values
+            tvMenuHeader.updatePadding(
+                top = headerInitialTop + systemBars.top,
+                left = headerInitialLeft + systemBars.left,
+                right = headerInitialRight + systemBars.right
             )
 
-            // Apply padding to RecyclerView (left, right, bottom)
-            rvMenuHeader.updatePadding(
-                left = systemBars.left,
-                right = systemBars.right,
-                bottom = systemBars.bottom
+            // Apply padding to RecyclerView (left, right, bottom) using initial values
+            rvMenuItems.updatePadding(
+                left = rvInitialLeft + systemBars.left,
+                right = rvInitialRight + systemBars.right,
+                bottom = rvInitialBottom + systemBars.bottom
             )
 
             windowInsets
