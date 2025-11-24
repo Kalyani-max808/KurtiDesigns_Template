@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Fragment Container -->
+    <!-- Fragment Container: Fills all space above the separator line -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -17,9 +17,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <!-- Top Separator (Above Ad) -->
+    <!-- Top Separator (8dp Line Above Ad) -->
     <View
         android:id="@+id/separator_line"
         android:layout_width="0dp"
@@ -27,27 +28,26 @@
         android:background="@color/LightYellow"
         app:layout_constraintBottom_toTopOf="@+id/adBanner"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Ad Banner -->
+    <!-- Constrained to the bottom of the parent.
+         Your Kotlin code adds bottom margin to this view for the Nav Bar. -->
     <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
         android:id="@+id/adBanner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:elevation="2dp"
-        ads:adSize="SMART_BANNER"
-        android:visibility="gone"
         android:layout_marginBottom="0dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:elevation="2dp"
+        android:visibility="gone"
+        ads:adSize="SMART_BANNER"
         ads:adUnitId="@string/BANNER_PROD_ID"
-        ads:layout_constraintBottom_toBottomOf="parent"
-        ads:layout_constraintEnd_toEndOf="parent"
-        ads:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Bottom Separator (Background for Nav Bar) -->
-    <!-- Constrained to the BOTTOM of the screen -->
+    <!-- Sits at the very bottom. Kotlin code sets its height to match Nav Bar height. -->
     <View
         android:id="@+id/bottom_separator_line"
         android:layout_width="0dp"
