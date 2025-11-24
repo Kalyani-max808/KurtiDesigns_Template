@@ -5,17 +5,16 @@
     android:id="@+id/jokeHeaderLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".oldclasses.ItemFragmentOld"
-    tools:layout_editor_absoluteY="25dp">
+    tools:context=".ItemFragment02">
 
-    <!-- TODO: Update blank fragment rate_me_layout -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="@color/colorAccent"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:titleTextColor="@android:color/white"
         app:layout_constraintTop_toTopOf="parent"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
@@ -23,14 +22,13 @@
         android:id="@+id/vpItemImage"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/my_toolbar" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -100,40 +100,52 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     }
 
     private fun setupSystemBars() {
-        // 1. Force Transparent Navigation Bar
-        window.navigationBarColor = Color.TRANSPARENT
+        // 1. Force Transparent Navigation Bar so our bottom separator shows through
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         // 2. Disable contrast enforcement on Android 10+ to prevent system scrims
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         }
 
-        // 3. Handle display cutouts
+        // 3. Handle display cutouts (Notches)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
 
-        // 4. Configure icons (Light/Dark)
+        // 4. Configure icons
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // API 30+ (Android 11+)
             window.insetsController?.let { controller ->
                 controller.show(WindowInsets.Type.systemBars())
+
+                // STATUS BAR: Set to 0 to Clear the "Light" flag -> Icons become WHITE
                 controller.setSystemBarsAppearance(
-                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
-                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
-                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                    0,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                )
+
+                // NAVIGATION BAR: Set the "Light" flag -> Icons become BLACK (Dark)
+                controller.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                 )
             }
         } else {
+            // API < 30 (Android 10 and below)
             WindowCompat.getInsetsController(window, window.decorView).let { controller ->
-                controller.isAppearanceLightStatusBars = true
+                // Status Bar -> White Icons
+                controller.isAppearanceLightStatusBars = false
+
+                // Navigation Bar -> Black Icons
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     controller.isAppearanceLightNavigationBars = true
                 }
             }
         }
     }
+
 
     private fun applyWindowInsets() {
         val rootLayout = findViewById<ConstraintLayout>(R.id.clMainActivity)
