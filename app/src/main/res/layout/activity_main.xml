@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Fragment Container: Fills all space above the separator line -->
+    <!-- Fragment Container -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -17,10 +17,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
-    <!-- Top Separator (8dp Line Above Ad) -->
+    <!-- Top Separator (8dp Line) -->
     <View
         android:id="@+id/separator_line"
         android:layout_width="0dp"
@@ -31,30 +30,36 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Ad Banner -->
-    <!-- Constrained to the bottom of the parent.
-         Your Kotlin code adds bottom margin to this view for the Nav Bar. -->
+    <!-- Constrained to TOP of Spacer -->
     <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
         android:id="@+id/adBanner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="0dp"
         android:elevation="2dp"
-        android:visibility="gone"
         ads:adSize="SMART_BANNER"
+        android:visibility="gone"
         ads:adUnitId="@string/BANNER_PROD_ID"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/navBarSpacer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Bottom Separator (Background for Nav Bar) -->
-    <!-- Sits at the very bottom. Kotlin code sets its height to match Nav Bar height. -->
+    <!-- Nav Bar Spacer (Invisible, holds space for System Nav Bar) -->
+    <Space
+        android:id="@+id/navBarSpacer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Bottom Background (Yellow) -->
+    <!-- Fills the Spacer area to color the Nav Bar -->
     <View
         android:id="@+id/bottom_separator_line"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@color/LightYellow"
+        app:layout_constraintTop_toTopOf="@+id/navBarSpacer"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

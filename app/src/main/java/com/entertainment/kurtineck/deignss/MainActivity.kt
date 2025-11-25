@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -56,29 +55,27 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ✅ STEP 1: Enable edge-to-edge
+        // 1. Enable Edge-to-Edge
         enableEdgeToEdge()
 
-        // ✅ STEP 2: Set content view
+        // 2. Set Content
         setContentView(R.layout.activity_main)
 
-        // ✅ STEP 3: Initialize views
+        // 3. Initialize Views
         adBanner = findViewById(R.id.adBanner)
         clMainActivity = findViewById(R.id.clMainActivity)
-
-        // ✅ Hide Banner by default until loaded
         adBanner.visibility = View.GONE
 
-        // ✅ STEP 4: Enable backward compatible inset dispatching
+        // 4. Backward Compatibility
         ViewGroupCompat.installCompatInsetsDispatch(clMainActivity as ViewGroup)
 
-        // ✅ STEP 5: Setup system bars (Force transparency)
+        // 5. Setup System Bars
         setupSystemBars()
 
-        // ✅ STEP 6: Apply window insets
+        // 6. Apply Insets
         applyWindowInsets()
 
-        // Continue with other initialization
+        // Initialization
         startANRWatchDog()
         initializeAdmob()
         loadSplashScreen()
@@ -103,45 +100,31 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
     }
 
     private fun setupSystemBars() {
-        // 1. Force Transparent Navigation Bar so our bottom separator shows through
-        window.navigationBarColor = android.graphics.Color.TRANSPARENT
-
-        // 2. Disable contrast enforcement on Android 10+ to prevent system scrims
+        window.navigationBarColor = Color.TRANSPARENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         }
-
-        // 3. Handle display cutouts (Notches)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
 
-        // 4. Configure icons
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // API 30+ (Android 11+)
             window.insetsController?.let { controller ->
                 controller.show(WindowInsets.Type.systemBars())
-
-                // STATUS BAR: Set to 0 to Clear the "Light" flag -> Icons become WHITE
+                // Status Bar = White Icons (0), Nav Bar = Black Icons (APPEARANCE_LIGHT...)
                 controller.setSystemBarsAppearance(
                     0,
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                 )
-
-                // NAVIGATION BAR: Set the "Light" flag -> Icons become BLACK (Dark)
                 controller.setSystemBarsAppearance(
                     WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
                     WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                 )
             }
         } else {
-            // API < 30 (Android 10 and below)
             WindowCompat.getInsetsController(window, window.decorView).let { controller ->
-                // Status Bar -> White Icons
                 controller.isAppearanceLightStatusBars = false
-
-                // Navigation Bar -> Black Icons
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     controller.isAppearanceLightNavigationBars = true
                 }
@@ -149,99 +132,43 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         }
     }
 
-
     private fun applyWindowInsets() {
-        val rootLayout = findViewById<ConstraintLayout>(R.id.clMainActivity)
-        val navHostFragmentContainer = findViewById<FragmentContainerView>(R.id.nav_host_fragment)
+        val navBarSpacer = findViewById<View>(R.id.navBarSpacer)
         val adBannerLayout = findViewById<AdView>(R.id.adBanner)
-        val bottomSeparatorLine = findViewById<View>(R.id.bottom_separator_line)
 
-        setupRootLayoutInsets(rootLayout)
-        setupNavHostInsets(navHostFragmentContainer)
-        setupAdBannerInsets(adBannerLayout)
+        // ✅ 1. Set Spacer Height to match Nav Bar
+        if (navBarSpacer != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(navBarSpacer) { view, windowInsets ->
+                val bars = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() or
+                            WindowInsetsCompat.Type.displayCutout()
+                )
+                val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
 
-        // ✅ Apply insets to the bottom separator
-        if (bottomSeparatorLine != null) {
-            setupBottomSeparatorInsets(bottomSeparatorLine)
+                // Height = Nav Bar + Keyboard
+                val newHeight = maxOf(bars.bottom, ime.bottom)
+
+                if (view.layoutParams.height != newHeight) {
+                    view.updateLayoutParams { height = newHeight }
+                }
+                windowInsets
+            }
         }
-    }
 
-    private fun setupBottomSeparatorInsets(separator: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(separator) { view, windowInsets ->
+        // ✅ 2. Handle Side Insets for Ad (No bottom margin needed anymore)
+        ViewCompat.setOnApplyWindowInsetsListener(adBannerLayout) { view, windowInsets ->
             val bars = windowInsets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or
                         WindowInsetsCompat.Type.displayCutout()
             )
-
-            // Set the height of this view to exactly match the bottom inset (Nav Bar height)
-            // This creates the colored background behind the nav bar
-            if (view.layoutParams.height != bars.bottom) {
-                view.updateLayoutParams {
-                    height = bars.bottom
-                }
-            }
-
+            // Just apply side padding/margin if needed
+            view.updatePadding(left = bars.left, right = bars.right)
             windowInsets
         }
     }
 
-    private fun setupRootLayoutInsets(rootLayout: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, windowInsets ->
-            windowInsets
-        }
-    }
-
-    private fun setupNavHostInsets(navHostContainer: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(navHostContainer) { view, windowInsets ->
-            // NavHost handles its own insets via Fragments
-            windowInsets
-        }
-    }
-
-    private fun setupAdBannerInsets(adBanner: View) {
-        ViewCompat.setOnApplyWindowInsetsListener(adBanner) { view, windowInsets ->
-            val bars = windowInsets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or
-                        WindowInsetsCompat.Type.displayCutout()
-            )
-            val navigationBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            val ime = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
-
-            val currentParams = view.layoutParams as? ViewGroup.MarginLayoutParams
-            if (currentParams != null) {
-                val originalMargins = view.tag as? IntArray ?: IntArray(4).apply {
-                    this[0] = currentParams.leftMargin
-                    this[1] = currentParams.topMargin
-                    this[2] = currentParams.rightMargin
-                    this[3] = currentParams.bottomMargin
-                    view.tag = this
-                }
-
-                // Just apply side margins if needed
-                val newLeftMargin = originalMargins[0] + bars.left
-                val newRightMargin = originalMargins[2] + bars.right
-
-                // ✅ Push AdBanner UP by the height of nav bar / keyboard
-                // We add 8dp (original margin) + system bar height
-                val newBottomMargin = originalMargins[3] + maxOf(navigationBars.bottom, ime.bottom)
-
-                if (currentParams.leftMargin != newLeftMargin ||
-                    currentParams.rightMargin != newRightMargin ||
-                    currentParams.bottomMargin != newBottomMargin
-                ) {
-                    currentParams.leftMargin = newLeftMargin
-                    currentParams.rightMargin = newRightMargin
-                    currentParams.bottomMargin = newBottomMargin
-                    view.layoutParams = currentParams
-                }
-            }
-            windowInsets
-        }
-    }
-
-    // ... Rest of your existing methods ...
-
-    private fun startANRWatchDog() { /* ... */ }
+    // ... Rest of initialization methods (unchanged) ...
+    private fun startANRWatchDog() {}
     private fun runInitializationInBackground() {
         val scope = CoroutineScope(Dispatchers.Default)
         scope.launch {
@@ -357,28 +284,21 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
             adBanner.loadAd(AdRequest.Builder().build())
         }
     }
-
-    // ✅ UPDATED: Setup Banner Listeners to handle Visibility
     private fun setupBannerAdListeners() {
         adBanner.adListener = object : AdListener() {
             override fun onAdLoaded() {
                 BannerLoaded = true
-                // ✅ Show Banner when loaded
                 adBanner.visibility = View.VISIBLE
             }
-
             override fun onAdOpened() {}
             override fun onAdClosed() {}
-
             override fun onAdFailedToLoad(error: LoadAdError) {
                 super.onAdFailedToLoad(error)
-                // ✅ Hide Banner if failed
                 adBanner.visibility = View.GONE
                 AppUtils().showSnackbarMsg("Banner failed to load.${error.message}")
             }
         }
     }
-
     override fun onResume() {
         super.onResume()
         if (AdObject.isTimerInProgress) restartTimer()
