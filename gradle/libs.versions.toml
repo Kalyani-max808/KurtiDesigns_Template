@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.2"
+agp = "8.13.1"
 androidxActivityKtx = "1.12.0"
 animatedWebp = "3.6.0"
 appcompatVersion = "1.7.1"
@@ -27,7 +27,6 @@ playServicesAds = "24.8.0"
 recyclerview = "1.4.0"
 roomRuntime = "2.8.4"
 runner = "1.7.0"
-facebook-audience = "6.21.0"
 
 [libraries]
 androidx-appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
@@ -58,7 +57,6 @@ material-v190 = { module = "com.google.android.material:material", version.ref =
 photodraweeview = { module = "me.relex:photodraweeview", version.ref = "photodraweeview" }
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 webpsupport = { module = "com.facebook.fresco:webpsupport", version.ref = "animatedWebp" }
-facebook-audience-network = { group = "com.facebook.android", name = "audience-network-sdk", version.ref = "facebook-audience" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidxActivityKtx" }
 
 [plugins]
