@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 androidxActivityKtx = "1.12.0"
 animatedWebp = "3.6.0"
 appcompatVersion = "1.7.1"
