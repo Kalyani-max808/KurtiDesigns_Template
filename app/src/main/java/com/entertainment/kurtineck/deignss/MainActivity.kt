@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity(), AppInterfaces {
         }
     }
     private fun startNetworkMonitoringServiceUsingCoroutines() {
-        NetworkWorker.runNetworkCheckingThread()
+        NetworkWorker.runNetworkCheckingThread(applicationContext)
     }
     private fun exitApplication() {
         val a = Intent(Intent.ACTION_MAIN)

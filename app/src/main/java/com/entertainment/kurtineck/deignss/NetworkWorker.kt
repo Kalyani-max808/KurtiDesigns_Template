@@ -13,14 +13,15 @@ object NetworkWorker {
     var isOnline: Boolean = true
     var adLimitEnabled: Boolean = false
 
-    lateinit var appContext: Context
+    // ❌ Removed: lateinit var appContext: Context
 
-    fun runNetworkCheckingThread() {
+    fun runNetworkCheckingThread(context: Context) { // ✅ Accept Context as parameter
+        val appContext = context.applicationContext   // ✅ Safe, no lateinit needed
         val scope = CoroutineScope(Dispatchers.Default)
         scope.launch {
             try {
                 while (!adLimitEnabled) {
-                    isOnline = isDeviceOnline()
+                    isOnline = isDeviceOnline(appContext)
                     logTheDeviceStatus()
                     sleepForSomeTime(isOnline)
                 }
@@ -51,14 +52,15 @@ object NetworkWorker {
         }
     }
 
-    fun isDeviceOnline(): Boolean {
+    fun isDeviceOnline(context: Context): Boolean { // ✅ Context passed in, no lateinit
         return try {
             val connectivityManager =
-                appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork ?: return false
             val capabilities =
                 connectivityManager.getNetworkCapabilities(network) ?: return false
-            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         } catch (e: Exception) {
             e.printStackTrace()
             false
